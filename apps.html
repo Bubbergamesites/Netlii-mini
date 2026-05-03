@@ -259,142 +259,119 @@
       "soundcloud.com",
       "y8.com"
         ];
+let activeGameUrl = "";
 
-        let currentBlobUrl = null;
-        let activeGameName = "";
+    function generateAllSections() {
+        const allChars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        const filesByChar = {};
+        allChars.forEach(char => filesByChar[char] = []);
 
-        function generateAllSections() {
-            const allChars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-            const filesByChar = {};
-            allChars.forEach(char => filesByChar[char] = []);
+        files.forEach(file => {
+            const firstChar = file.charAt(0).toUpperCase();
+            if (filesByChar[firstChar]) filesByChar[firstChar].push(file);
+        });
 
-            files.forEach(file => {
-                const firstChar = file.charAt(0).toUpperCase();
-                if (filesByChar[firstChar]) filesByChar[firstChar].push(file);
-            });
+        const container = document.getElementById('sections-container');
+        container.innerHTML = ''; 
 
-            const container = document.getElementById('sections-container');
-            allChars.forEach(char => {
-                if (filesByChar[char].length === 0) return;
+        allChars.forEach(char => {
+            if (filesByChar[char].length === 0) return;
 
-                const section = document.createElement('div');
-                section.className = 'letter-section';
-                section.id = `section-${char}`;
-                
-                const header = document.createElement('div');
-                header.className = 'letter-header';
-                header.textContent = char;
-                section.appendChild(header);
-
-                const buttonsContainer = document.createElement('div');
-                buttonsContainer.className = 'buttons-container';
-
-                filesByChar[char].forEach(file => {
-                    const btn = document.createElement('button');
-                    btn.className = 'game-button';
-                    btn.textContent = file;
-                    btn.onclick = () => openGame(file);
-                    buttonsContainer.appendChild(btn);
-                });
-
-                section.appendChild(buttonsContainer);
-                container.appendChild(section);
-            });
-            generateSidebar(allChars, filesByChar);
-        }
-
-        async function openGame(file) {
-            const modal = document.getElementById('gameModal');
-            const frame = document.getElementById('gameFrame');
-            const title = document.getElementById('modalTitle');
+            const section = document.createElement('div');
+            section.className = 'letter-section';
+            section.id = `section-${char}`;
             
-            title.textContent = `Loading: ${file}...`;
-            modal.style.display = 'flex';
-            activeGameName = file.includes('.') ? file : file + '.html';
+            const header = document.createElement('div');
+            header.className = 'letter-header';
+            header.textContent = char;
+            section.appendChild(header);
 
-            const url = `/Nexus-Proxy/embed#https://${encodeURIComponent(activeGameName)}`;
+            const buttonsContainer = document.createElement('div');
+            buttonsContainer.className = 'buttons-container';
 
-            try {
-                const response = await fetch(url);
-                rawGameHtml = await response.text();
-                
-                if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
-                const blob = new Blob([rawGameHtml], { type: 'text/html' });
-                currentBlobUrl = URL.createObjectURL(blob);
-                
-                frame.src = currentBlobUrl;
-                title.textContent = file;
-            } catch (err) {
-                title.textContent = "Error Loading Game";
-                console.error(err);
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('gameModal').style.display = 'none';
-            document.getElementById('gameFrame').src = "about:blank"; // Stop audio
-        }
-
-        function toggleFullscreen() {
-            const frame = document.getElementById('gameFrame');
-            if (frame.requestFullscreen) frame.requestFullscreen();
-            else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
-        }
-
-        function downloadCurrentGame() {
-            if (!currentBlobUrl) return;
-            const a = document.createElement('a');
-            a.href = currentBlobUrl;
-            a.download = activeGameName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-        function openAboutBlank() {
-            if (!rawGameHtml) return;
-            
-            const win = window.open("about:blank", "_blank");
-            if (!win) {
-                alert("Please allow popups for this site to use About:Blank mode.");
-                return;
-            }
-
-            win.document.write(rawGameHtml);
-            win.document.close();
-            
-            // Optional: Close the in-page modal since they opened it in a new tab
-            closeModal();
-        }''
-        
-
-        function filterGames() {
-            const filter = document.getElementById('gameSearch').value.toLowerCase();
-            const sections = document.getElementsByClassName('letter-section');
-            for (let section of sections) {
-                const buttons = section.getElementsByClassName('game-button');
-                let match = false;
-                for (let btn of buttons) {
-                    const isVisible = btn.textContent.toLowerCase().includes(filter);
-                    btn.style.display = isVisible ? "" : "none";
-                    if (isVisible) match = true;
-                }
-                section.style.display = match ? "" : "none";
-            }
-        }
-
-        function generateSidebar(allChars, filesByChar) {
-            const sidebar = document.getElementById('sidebar');
-            allChars.forEach(char => {
+            filesByChar[char].forEach(file => {
                 const btn = document.createElement('button');
-                btn.className = 'sidebar-btn';
-                btn.textContent = char;
-                if (filesByChar[char].length === 0) btn.classList.add('empty');
-                else btn.onclick = () => document.getElementById(`section-${char}`).scrollIntoView({behavior: 'smooth'});
-                sidebar.appendChild(btn);
+                btn.className = 'game-button';
+                btn.textContent = file;
+                btn.onclick = () => openGame(file);
+                buttonsContainer.appendChild(btn);
             });
-        }
 
-        window.addEventListener('DOMContentLoaded', generateAllSections);
-    </script>
+            section.appendChild(buttonsContainer);
+            container.appendChild(section);
+        });
+        generateSidebar(allChars, filesByChar);
+    }
+
+    function openGame(file) {
+        const modal = document.getElementById('gameModal');
+        const frame = document.getElementById('gameFrame');
+        const title = document.getElementById('modalTitle');
+        
+        // Construct the direct URL for the iframe
+        activeGameUrl = `/Nexus-Proxy/embed#https://${encodeURIComponent(file)}`;
+        
+        title.textContent = file;
+        frame.src = activeGameUrl; // Set iframe source directly
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('gameModal').style.display = 'none';
+        document.getElementById('gameFrame').src = "about:blank"; 
+    }
+
+    function toggleFullscreen() {
+        const frame = document.getElementById('gameFrame');
+        if (frame.requestFullscreen) frame.requestFullscreen();
+        else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+    }
+
+    function openAboutBlank() {
+        if (!activeGameUrl) return;
+        const win = window.open("about:blank", "_blank");
+        if (win) {
+            win.document.write(`<iframe src="${activeGameUrl}" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;"></iframe>`);
+        } else {
+            alert("Please allow popups.");
+        }
+    }
+
+    function downloadCurrentGame() {
+        // Since we are using a proxy iframe, 'downloading' the source is restricted by security.
+        // This button will now open the raw proxy link in a new tab.
+        window.open(activeGameUrl, '_blank');
+    }
+
+    function filterGames() {
+        const filter = document.getElementById('gameSearch').value.toLowerCase();
+        const sections = document.getElementsByClassName('letter-section');
+        for (let section of sections) {
+            const buttons = section.getElementsByClassName('game-button');
+            let match = false;
+            for (let btn of buttons) {
+                const isVisible = btn.textContent.toLowerCase().includes(filter);
+                btn.style.display = isVisible ? "" : "none";
+                if (isVisible) match = true;
+            }
+            section.style.display = match ? "" : "none";
+        }
+    }
+
+    function generateSidebar(allChars, filesByChar) {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.innerHTML = '';
+        allChars.forEach(char => {
+            const btn = document.createElement('button');
+            btn.className = 'sidebar-btn';
+            btn.textContent = char;
+            if (filesByChar[char].length === 0) btn.classList.add('empty');
+            else btn.onclick = () => document.getElementById(`section-${char}`).scrollIntoView({behavior: 'smooth'});
+            sidebar.appendChild(btn);
+        });
+    }
+
+    window.addEventListener('DOMContentLoaded', generateAllSections);
+</script>
 </body>
 </html>
