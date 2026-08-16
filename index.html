@@ -1,46 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script type="module">
-    import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
-    window.BareMux = BareMux;
-</script>
-
-<script>
-    async function setupProxy() {
-    if (!('serviceWorker' in navigator)) return;
-
-    try {
-        const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
-        await navigator.serviceWorker.ready;
-
-        if (window.BareMux) {
-            const conn = new window.BareMux.BareMuxConnection("./bareworker.js");
-            let wispUrl = localStorage.getItem("proxServer") || "wss://wisp.mercurywork.shop/";
-            
-            await conn.setTransport(
-                "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs", 
-                [{ wisp: wispUrl }]
-            );
-
-            // Give the SW a tiny bit of time to initialize listeners
-            const controller = navigator.serviceWorker.controller || reg.active;
-            if (controller) {
-                controller.postMessage({
-                    type: "config",
-                    wispurl: wispUrl
-                });
-            }
-            console.log("NETLII Proxy: Initialized");
-        }
-    } catch (err) {
-        console.error("Proxy Setup Failed:", err);
-    }
-}
-
-    // Run setup after the page loads to prevent blocking the UI
-    window.addEventListener('load', setupProxy);
-</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -52,14 +12,6 @@
             --container-bg: rgba(255, 255, 255, 0.8);
             --body-bg: #f4f4f4;
             --bg-image: url('netlii-bg.avif');
-        }
-
-        [data-theme="dark"] {
-            --text-color: #ffffff;
-            --container-bg: rgba(0, 0, 0, 0.6);
-            --body-bg: #121212;
-            /* Using the provided background image for dark mode */
-            --bg-image: url('netlii-bg 2.avif');
         }
 
         html, body {
@@ -178,13 +130,12 @@
                 <div class="icon-circle">🤖</div>
                 <span class="icon-label">Chat AI</span>
             </a>
-            <a href="./movies.html" class="nav-item">
+            <a href="./web/#https://ghapadharabalagga.pages.dev/movies-and-tv" class="nav-item">
                 <div class="icon-circle">🍿</div>
                 <span class="icon-label">Movies</span>
             </a>
         </div>
     </div>
-    <iframe style="border:1px #FFFFFF none" src="/Nexus-Proxy/index.html" title="iFrame" width="1px" height="1px" scrolling="no" frameborder="no" allow=""></iframe>
 
    <script>
        // Updated Search Logic for Nexus-proxy
@@ -200,10 +151,10 @@ function search(query) {
             url = 'https://' + url;
         }
         // Redirect to the Nexus embed page with the URL
-        window.location.href = `/Nexus-Proxy/#${url}`;
+        window.location.href = `/web/#${url}`;
     } else {
         // Redirect to the Nexus embed page with a Google search
-        window.location.href = `/Nexus-Proxy/#${searchEngine}${encodeURIComponent(query)}`;
+        window.location.href = `/web/#${searchEngine}${encodeURIComponent(query)}`;
     }
 }
 
